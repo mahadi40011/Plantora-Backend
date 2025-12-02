@@ -1,4 +1,5 @@
 require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -16,11 +17,7 @@ const app = express();
 // middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://b12-m11-session.web.app",
-    ],
+    origin: [process.env.CLIENT_DOMAIN],
     credentials: true,
     optionSuccessStatus: 200,
   })
@@ -72,10 +69,41 @@ async function run() {
 
     // get a single data from database
     app.get("/plants/:id", async (req, res) => {
-      const { id } = req.params
-      const query = {_id: new ObjectId(id)}
-      const result = await plantsCollection.findOne(query)
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const result = await plantsCollection.findOne(query);
       res.send(result);
+    });
+
+    //Payment endPint
+    app.post("/create-checkout-session", async (req, res) => {
+      const paymentInfo = req.body;
+
+      const session = await stripe.checkout.sessions.create({
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: paymentInfo?.name,
+                description: paymentInfo?.description,
+                images: [paymentInfo?.image],
+              },
+              unit_amount: paymentInfo?.price * 100,
+            },
+            quantity: paymentInfo?.quantity,
+          },
+        ],
+        customer_email: paymentInfo?.customer?.email,
+        mode: "payment",
+        metadata: {
+          plantId: paymentInfo?.plantId,
+          customer: paymentInfo?.customer?.email,
+        },
+        success_url: `${process.env.CLIENT_DOMAIN}/payment-success`,
+        cancel_url: `${process.env.CLIENT_DOMAIN}/plant/${paymentInfo?.plantId}`,
+      });
+      res.send({ url: session.url });
     });
 
     // Send a ping to confirm a successful connection

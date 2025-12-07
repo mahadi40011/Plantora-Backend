@@ -161,13 +161,26 @@ async function run() {
       res.send(result);
     });
 
-    // get all Inventory for a seller by email
+    // get all plants for a seller by email
     app.get("/inventory/:email", async (req, res) => {
       try {
         const { email } = req.params;
         const query = { "seller.email": email };
 
         const result = await plantsCollection.find(query).toArray();
+        res.status(200).json(result);
+      } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+      }
+    });
+
+    // get all orders for a seller by email
+    app.get("/manage-orders/:email", async (req, res) => {
+      try {
+        const { email } = req.params;
+        const query = { "seller.email": email };
+
+        const result = await ordersCollection.find(query).toArray();
         res.status(200).json(result);
       } catch (error) {
         res.status(500).json({ message: "Server error", error });

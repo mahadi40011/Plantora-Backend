@@ -153,6 +153,14 @@ async function run() {
       });
     });
 
+    // get all orders for a customer by email
+    app.get("/orders/:email", async (req, res) => {
+      const { email } = req.params;
+      const query = { customer: email };
+      const result = await ordersCollection.find(query).toArray()
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(

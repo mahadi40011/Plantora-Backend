@@ -157,8 +157,21 @@ async function run() {
     app.get("/orders/:email", async (req, res) => {
       const { email } = req.params;
       const query = { customer: email };
-      const result = await ordersCollection.find(query).toArray()
+      const result = await ordersCollection.find(query).toArray();
       res.send(result);
+    });
+
+    // get all Inventory for a seller by email
+    app.get("/inventory/:email", async (req, res) => {
+      try {
+        const { email } = req.params;
+        const query = { "seller.email": email };
+
+        const result = await plantsCollection.find(query).toArray();
+        res.status(200).json(result);
+      } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+      }
     });
 
     // Send a ping to confirm a successful connection

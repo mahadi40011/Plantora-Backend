@@ -194,9 +194,10 @@ async function run() {
 
       userData.created_at = new Date().toISOString();
       userData.last_loggedIn = new Date().toISOString();
+      userData.role = "customer";
 
       const query = { email: userData.email };
-      const alreadyExist = usersCollection.findOne(query);
+      const alreadyExist = await usersCollection.findOne(query);
 
       if (alreadyExist) {
         const result = await usersCollection.updateOne(query, {

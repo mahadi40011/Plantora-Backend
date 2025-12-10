@@ -53,6 +53,7 @@ async function run() {
     const db = client.db("Plantora_DB");
     const plantsCollection = db.collection("Plants");
     const ordersCollection = db.collection("Orders");
+    const usersCollection = db.collection("Users");
 
     //send 1 data to database
     app.post("/plants", async (req, res) => {
@@ -185,6 +186,13 @@ async function run() {
       } catch (error) {
         res.status(500).json({ message: "Server error", error });
       }
+    });
+
+    // Set or update user in database
+    app.post("/user", async (req, res) => {
+      const userData = req.body;
+      const result = await usersCollection.insertOne(userData);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection

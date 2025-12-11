@@ -229,6 +229,12 @@ async function run() {
       res.send(result);
     });
 
+    //get all Seller Requests from database
+    app.get("/seller-requests", verifyJWT, async (req, res) => {
+      const result = await becomeSellerCollection.find().toArray();
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(

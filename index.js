@@ -54,6 +54,7 @@ async function run() {
     const plantsCollection = db.collection("Plants");
     const ordersCollection = db.collection("Orders");
     const usersCollection = db.collection("Users");
+    const becomeSellerCollection = db.collection("become-seller");
 
     //send 1 data to database
     app.post("/plants", async (req, res) => {
@@ -213,6 +214,19 @@ async function run() {
     app.get("/user/role", verifyJWT, async (req, res) => {
       const result = await usersCollection.findOne({ email: req.tokenEmail });
       res.send({ role: result.role });
+    });
+
+    //save seller request
+    app.post("/become-seller", verifyJWT, async (req, res) => {
+      const email = req.tokenEmail;
+      const alreadyExist = await becomeSellerCollection.findOne({ email });
+      if (alreadyExist) {
+        return res
+          .status(409)
+          .send({ message: "Already requested, please wait" });
+      }
+      const result = await becomeSellerCollection.insertOne({ email });
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection

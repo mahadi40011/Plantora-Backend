@@ -210,6 +210,13 @@ async function run() {
       res.send(result);
     });
 
+    //get all users for manage users
+    app.get("/users", verifyJWT, async (req, res) => {
+      const adminEmail = req.tokenEmail
+      const result = await usersCollection.find({email: {$ne: adminEmail}}).toArray()
+      res.send(result)
+    })
+
     //get a user role
     app.get("/user/role", verifyJWT, async (req, res) => {
       const result = await usersCollection.findOne({ email: req.tokenEmail });

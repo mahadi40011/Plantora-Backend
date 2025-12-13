@@ -56,6 +56,30 @@ async function run() {
     const usersCollection = db.collection("Users");
     const becomeSellerCollection = db.collection("become-seller");
 
+    //ADMIN  VERIFY MIDDLEWARES
+    const verifyADMIN = async (req, res, next) => {
+      const email = req.tokenEmail;
+      const user = await usersCollection.findOne({ email });
+      if (user?.role !== "admin") {
+        return res
+          .status(403)
+          .send({ message: `Admin Access Only, You are ${user?.role}` });
+      }
+      next();
+    };
+
+    //SELLER  VERIFY MIDDLEWARES
+    const verifySELLER = async (req, res, next) => {
+      const email = req.tokenEmail;
+      const user = await usersCollection.findOne({ email });
+      if (user?.role !== "seller") {
+        return res
+          .status(403)
+          .send({ message: `Seller Access Only, You are ${user?.role}` });
+      }
+      next();
+    };
+
     //send 1 data to database
     app.post("/plants", async (req, res) => {
       const plantData = req.body;
@@ -212,10 +236,12 @@ async function run() {
 
     //get all users for manage users
     app.get("/users", verifyJWT, async (req, res) => {
-      const adminEmail = req.tokenEmail
-      const result = await usersCollection.find({email: {$ne: adminEmail}}).toArray()
-      res.send(result)
-    })
+      const adminEmail = req.tokenEmail;
+      const result = await usersCollection
+        .find({ email: { $ne: adminEmail } })
+        .toArray();
+      res.send(result);
+    });
 
     //get a user role
     app.get("/user/role", verifyJWT, async (req, res) => {

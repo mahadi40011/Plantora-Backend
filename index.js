@@ -80,8 +80,8 @@ async function run() {
       next();
     };
 
-    //send 1 data to database
-    app.post("/plants", async (req, res) => {
+    //send 1 data to database [Seller Only]
+    app.post("/plants", verifyJWT, verifySELLER, async (req, res) => {
       const plantData = req.body;
       console.log(plantData);
       const result = await plantsCollection.insertOne(plantData);
@@ -133,6 +133,7 @@ async function run() {
       res.send({ url: session.url });
     });
 
+    //payment-success and this data save to ordersCollection
     app.post("/payment-success", async (req, res) => {
       const { sessionId } = req.body;
       const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -187,7 +188,7 @@ async function run() {
     });
 
     // get all plants for a seller by email
-    app.get("/inventory/:email", async (req, res) => {
+    app.get("/inventory/:email", verifyJWT, verifySELLER, async (req, res) => {
       try {
         const { email } = req.params;
         const query = { "seller.email": email };
@@ -200,17 +201,22 @@ async function run() {
     });
 
     // get all orders for a seller by email
-    app.get("/manage-orders/:email", async (req, res) => {
-      try {
-        const { email } = req.params;
-        const query = { "seller.email": email };
+    app.get(
+      "/manage-orders/:email",
+      verifyJWT,
+      verifySELLER,
+      async (req, res) => {
+        try {
+          const { email } = req.params;
+          const query = { "seller.email": email };
 
-        const result = await ordersCollection.find(query).toArray();
-        res.status(200).json(result);
-      } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+          const result = await ordersCollection.find(query).toArray();
+          res.status(200).json(result);
+        } catch (error) {
+          res.status(500).json({ message: "Server error", error });
+        }
       }
-    });
+    );
 
     // Set or update user in database
     app.post("/user", async (req, res) => {
@@ -235,7 +241,7 @@ async function run() {
     });
 
     //get all users for manage users
-    app.get("/users", verifyJWT, async (req, res) => {
+    app.get("/users", verifyJWT, verifyADMIN, async (req, res) => {
       const adminEmail = req.tokenEmail;
       const result = await usersCollection
         .find({ email: { $ne: adminEmail } })
@@ -263,13 +269,13 @@ async function run() {
     });
 
     //get all Seller Requests from database
-    app.get("/seller-requests", verifyJWT, async (req, res) => {
+    app.get("/seller-requests", verifyJWT, verifyADMIN, async (req, res) => {
       const result = await becomeSellerCollection.find().toArray();
       res.send(result);
     });
 
     //update user role and delete from Seller Request collection if needed
-    app.patch("/update-role", verifyJWT, async (req, res) => {
+    app.patch("/update-role", verifyJWT, verifyADMIN, async (req, res) => {
       const { email, role } = req.body;
       const result = await usersCollection.updateOne(
         { email },

@@ -235,6 +235,17 @@ async function run() {
       res.send(result);
     });
 
+    //update user role and delete from Seller Request collection if needed
+    app.patch("/update-role", verifyJWT, async (req, res) => {
+      const { email, role } = req.body;
+      const result = await usersCollection.updateOne(
+        { email },
+        { $set: { role } }
+      );
+      await becomeSellerCollection.deleteOne({ email });
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
